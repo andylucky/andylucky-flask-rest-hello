@@ -8,6 +8,7 @@ db = SQLAlchemy()
 
 
 class User(db.Model):
+    __tablename__ = 'user'
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(nullable=False)
     email: Mapped[str] = mapped_column(
@@ -15,7 +16,10 @@ class User(db.Model):
     password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
     posts: Mapped[list["Posts"]] = relationship(back_populates="user")
-    followers: Mapped[list["Followers"]] = relationship(back_populates="user")
+    following: Mapped[list["Followers"]] = relationship(
+        back_populates="following")
+    followed: Mapped[list["Followers"]] = relationship(
+        back_populates="followed")
     comentarios: Mapped[list["Comentario"]
                         ] = relationship(back_populates="user")
 
@@ -30,18 +34,28 @@ class User(db.Model):
 
 
 class Followers(db.Model):
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    user: Mapped["User"] = relationship(back_populates="followers")
+    __tablename__ = 'followers'
+
+# como te conectas a la tabla
+    follower_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id"), primary_key=True)
+    followed_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id"), primary_key=True)
+
+# el valor de los id
+    following: Mapped["User"] = relationship(back_populates="following")
+    # el valor de followers.followed se va a mostrar en users.followed
+    followed: Mapped["User"] = relationship(back_populates="followed")
 
     def serialize(self):
         return {
             "id": self.id,
-            "user": self.user.name
+
         }
 
 
 class Posts(db.Model):
+    __tablename__ = 'posts'
     id: Mapped[int] = mapped_column(primary_key=True)
     text: Mapped[str] = mapped_column(nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
@@ -59,6 +73,7 @@ class Posts(db.Model):
 
 
 class Comentario(db.Model):
+    __tablename__ = 'comentario'
     id: Mapped[int] = mapped_column(primary_key=True)
     text: Mapped[str] = mapped_column(nullable=False)
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
